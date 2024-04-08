@@ -17,8 +17,8 @@ struct Cli {
 enum Commands {
     /// Estimate the price of a given LLM
     Estimate {
-        /// Name of the LLM model
-        model_name: String,
+        /// Name of the LLM model (optional)
+        model_name: Option<String>,
 
         /// Number of input tokens
         #[arg(long)]
@@ -124,16 +124,35 @@ fn main() {
             file,
         }) => {
             let pricing = load_pricing_from_file(&file);
-            if let Some(cost) = pricing.models.get(&model_name) {
-                let input_cost = cost.input * (input_tokens as f64) / 1_000_000.0;
-                let output_cost = cost.output * (output_tokens as f64) / 1_000_000.0;
-                let total_cost = input_cost + output_cost;
-                println!(
-                    "Estimated cost for model '{}': ${:.2}",
-                    model_name, total_cost
-                );
+            if let Some(model_name) = model_name {
+                if let Some(cost) = pricing.models.get(&model_name) {
+                    let input_cost = cost.input * (input_tokens as f64) / 1_000_000.0;
+                    let output_cost = cost.output * (output_tokens as f64) / 1_000_000.0;
+                    let total_cost = input_cost + output_cost;
+                    println!(
+                        "Estimated cost for model '{}': ${:.2}",
+                        model_name, total_cost
+                    );
+                } else {
+                    eprintln!("Model '{}' not found in the pricing file.", model_name);
+                }
             } else {
-                eprintln!("Model '{}' not found in the pricing file.", model_name);
+                let mut model_costs: Vec<(&String, &LLMCost)> = pricing.models.iter().collect();
+                model_costs.sort_by(|a, b| {
+                    let total_a = a.1.input + a.1.output;
+                    let total_b = b.1.input + b.1.output;
+                    total_b.partial_cmp(&total_a).unwrap()
+                });
+
+                let mut table = Table::new();
+                table.add_row(row!["Model", "Input Cost (based on input)", "Output Cost (based on output)", "Total Cost"]);
+                for (model_name, cost) in model_costs {
+                    let input_cost = cost.input * (input_tokens as f64) / 1_000_000.0;
+                    let output_cost = cost.output * (output_tokens as f64) / 1_000_000.0;
+                    let total_cost = input_cost + output_cost;
+                    table.add_row(row![model_name, format!("${:.2}", input_cost), format!("${:.2}", output_cost), format!("${:.2}", total_cost)]);
+                }
+                table.printstd();
             }
         }
         Some(Commands::List { file, sort }) => {
