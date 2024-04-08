@@ -2,9 +2,9 @@ use std::fs::{File, OpenOptions};
 use std::io::{BufReader, BufWriter};
 use std::path::PathBuf;
 
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use serde::{Deserialize, Serialize};
-use prettytable::row;
+use prettytable::{row, Table};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -38,6 +38,10 @@ enum Commands {
         /// Path to the JSON file containing LLM pricing information
         #[arg(short, long, value_name = "FILE", default_value = "llm_pricing.json")]
         file: PathBuf,
+
+        /// Sort the list by the specified metric
+        #[arg(long, value_enum, default_value_t = SortMetric::CostScoreRatio)]
+        sort: SortMetric,
     },
 
     /// Manage LLM pricing information
@@ -45,6 +49,14 @@ enum Commands {
         #[command(subcommand)]
         command: ManageCommands,
     },
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
+enum SortMetric {
+    CostScoreRatio,
+    Price,
+    Score,
+    ModelName,
 }
 
 #[derive(Subcommand)]
@@ -59,6 +71,9 @@ enum ManageCommands {
 
         /// Output cost per 1M tokens in dollars
         output_cost: f64,
+
+        /// Arena Elo Score of the LLM model
+        score: Option<i32>,
     },
 
     /// Delete an LLM model and its pricing information
@@ -79,6 +94,10 @@ enum ManageCommands {
         /// Output cost per 1M tokens in dollars
         #[arg(long)]
         output_cost: Option<f64>,
+
+        /// Arena Elo Score of the LLM model
+        #[arg(long)]
+        score: Option<i32>,
     },
 }
 
@@ -91,6 +110,7 @@ struct LLMPricing {
 struct LLMCost {
     input: f64,
     output: f64,
+    score: Option<i32>,
 }
 
 fn main() {
@@ -116,19 +136,32 @@ fn main() {
                 eprintln!("Model '{}' not found in the pricing file.", model_name);
             }
         }
-        Some(Commands::List { file }) => {
-            let mut pricing = load_pricing_from_file(&file);
+        Some(Commands::List { file, sort }) => {
+            let pricing = load_pricing_from_file(&file);
             let mut model_costs: Vec<(&String, &LLMCost)> = pricing.models.iter().collect();
+
             model_costs.sort_by(|a, b| {
-                let total_a = a.1.input + a.1.output;
-                let total_b = b.1.input + b.1.output;
-                total_a.partial_cmp(&total_b).unwrap()
+                match sort {
+                    SortMetric::CostScoreRatio => {
+                        let ratio_a = (a.1.input + a.1.output) / (a.1.score.unwrap_or(0) as f64);
+                        let ratio_b = (b.1.input + b.1.output) / (b.1.score.unwrap_or(0) as f64);
+                        ratio_a.partial_cmp(&ratio_b).unwrap()
+                    }
+                    SortMetric::Price => {
+                        let total_a = a.1.input + a.1.output;
+                        let total_b = b.1.input + b.1.output;
+                        total_a.partial_cmp(&total_b).unwrap()
+                    }
+                    SortMetric::Score => b.1.score.cmp(&a.1.score),
+                    SortMetric::ModelName => a.0.cmp(b.0),
+                }
             });
-        
-            let mut table = prettytable::Table::new();
-            table.add_row(row!["Model", "Input Cost (per 1M tokens)", "Output Cost (per 1M tokens)"]);
+
+            let mut table = Table::new();
+            table.add_row(row!["Model", "Input Cost (per 1M tokens)", "Output Cost (per 1M tokens)", "Score"]);
             for (model_name, cost) in model_costs {
-                table.add_row(row![model_name, format!("${:.2}", cost.input), format!("${:.2}", cost.output)]);
+                let score = cost.score.map(|s| s.to_string()).unwrap_or_else(|| "-".to_string());
+                table.add_row(row![model_name, format!("${:.2}", cost.input), format!("${:.2}", cost.output), score]);
             }
             table.printstd();
         }
@@ -137,6 +170,7 @@ fn main() {
                 model_name,
                 input_cost,
                 output_cost,
+                score,
             } => {
                 let mut pricing = load_pricing_from_file(&PathBuf::from("llm_pricing.json"));
                 pricing.models.insert(
@@ -144,6 +178,7 @@ fn main() {
                     LLMCost {
                         input: input_cost,
                         output: output_cost,
+                        score,
                     },
                 );
                 save_pricing_to_file(&pricing, &PathBuf::from("llm_pricing.json"));
@@ -162,6 +197,7 @@ fn main() {
                 model_name,
                 input_cost,
                 output_cost,
+                score,
             } => {
                 let mut pricing = load_pricing_from_file(&PathBuf::from("llm_pricing.json"));
                 if let Some(cost) = pricing.models.get_mut(&model_name) {
@@ -170,6 +206,9 @@ fn main() {
                     }
                     if let Some(output) = output_cost {
                         cost.output = output;
+                    }
+                    if let Some(s) = score {
+                        cost.score = Some(s);
                     }
                     save_pricing_to_file(&pricing, &PathBuf::from("llm_pricing.json"));
                     println!("Model '{}' updated successfully.", model_name);
