@@ -1,0 +1,12 @@
+[package]
+name = "llm-docs-to-knowledge"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = {version="4", features = ["derive"]}
+docs_to_knowledge = {path="../docs-to-knowledge"}
+tokio = "1"
+
+[lints]
+workspace = true

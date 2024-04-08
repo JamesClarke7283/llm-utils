@@ -1,5 +1,5 @@
 [workspace]
-members = ["llm-codebase-to-prompt"]
+members = ["docs-to-knowledge","llm-codebase-to-prompt", "llm-docs-to-knowledge"]
 resolver = "2"
 
 # Lints
