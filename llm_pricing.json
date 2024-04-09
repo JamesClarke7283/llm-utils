@@ -3,12 +3,12 @@
     "claude-3-haiku-20240307": {
       "input": 0.25,
       "output": 1.25,
-      "score": 1177
+      "score": 1182
     },
     "command-r": {
       "input": 0.5,
       "output": 1.5,
-      "score": 1146
+      "score": 1148
     },
     "mistral-small-latest": {
       "input": 2.0,
@@ -18,37 +18,37 @@
     "claude-3-sonnet-20240229": {
       "input": 3.0,
       "output": 15.0,
-      "score": 1200
+      "score": 1204
     },
     "mistral-medium-latest": {
       "input": 2.7,
       "output": 8.1,
-      "score": 1146
+      "score": 1148
     },
     "command-r-plus": {
       "input": 3.0,
       "output": 15.0,
-      "score": null
+      "score": 1194
     },
     "mistral-large-latest": {
       "input": 8.0,
       "output": 24.0,
-      "score": 1157
+      "score": 1158
     },
     "gpt-4-0125-preview": {
       "input": 10.0,
       "output": 30.0,
-      "score": 1249
+      "score": 1250
     },
     "claude-3-opus-20240229": {
       "input": 15.0,
       "output": 75.0,
-      "score": 1255
+      "score": 1256
     },
     "gpt-3.5-turbo-0125": {
       "input": 0.5,
       "output": 1.5,
-      "score": 1098
+      "score": 1119
     }
   }
 }
