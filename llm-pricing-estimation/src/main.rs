@@ -349,9 +349,9 @@ fn parse_knowledge_cutoff(date_str: Option<String>) -> Option<i64> {
                 let month = parts[1].parse::<u32>().unwrap_or(1);
                 let year = parts[2].parse::<i32>().unwrap_or(2000);
                 let naive_date = chrono::NaiveDate::from_ymd_opt(year, month, day)
-                    .unwrap_or(chrono::NaiveDate::from_ymd(2000, 1, 1));
+                    .unwrap_or(chrono::NaiveDate::from_ymd_opt(2000, 1, 1).unwrap());
                 let naive_datetime = naive_date.and_hms_opt(0, 0, 0).unwrap();
-                Some(naive_datetime.timestamp())
+                Some(naive_datetime.and_utc().timestamp())
             } else {
                 None
             }
@@ -365,8 +365,7 @@ fn format_knowledge_cutoff(epoch: i64) -> String {
     if epoch == 0 {
         "Online".to_string()
     } else {
-        let naive_datetime = chrono::NaiveDateTime::from_timestamp_opt(epoch, 0).unwrap();
-        let datetime = chrono::DateTime::<chrono::Utc>::from_utc(naive_datetime, chrono::Utc);
+        let datetime = chrono::DateTime::from_timestamp(epoch, 0).unwrap();
         datetime.format("%d/%m/%Y").to_string()
     }
 }
