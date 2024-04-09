@@ -1,64 +1,74 @@
 {
   "models": {
-    "gpt-4-0125-preview": {
-      "input": 10.0,
-      "output": 30.0,
-      "score": 1250,
-      "context_length": 128000
-    },
-    "mistral-medium-latest": {
-      "input": 2.7,
-      "output": 8.1,
-      "score": 1148,
-      "context_length": 32000
-    },
-    "gpt-3.5-turbo-0125": {
-      "input": 0.5,
-      "output": 1.5,
-      "score": 1119,
-      "context_length": 16385
-    },
-    "claude-3-haiku-20240307": {
-      "input": 0.25,
-      "output": 1.25,
-      "score": 1182,
-      "context_length": 200000
-    },
-    "command-r": {
-      "input": 0.5,
-      "output": 1.5,
-      "score": 1148,
-      "context_length": 128000
-    },
     "mistral-large-latest": {
       "input": 8.0,
       "output": 24.0,
       "score": 1158,
-      "context_length": 32000
-    },
-    "claude-3-opus-20240229": {
-      "input": 15.0,
-      "output": 75.0,
-      "score": 1256,
-      "context_length": 200000
-    },
-    "claude-3-sonnet-20240229": {
-      "input": 3.0,
-      "output": 15.0,
-      "score": 1204,
-      "context_length": 200000
-    },
-    "command-r-plus": {
-      "input": 3.0,
-      "output": 15.0,
-      "score": 1194,
-      "context_length": 128000
+      "context_length": 32000,
+      "knowledge_cutoff": null
     },
     "mistral-small-latest": {
       "input": 2.0,
       "output": 6.0,
       "score": 1114,
-      "context_length": 32000
+      "context_length": 32000,
+      "knowledge_cutoff": null
+    },
+    "mistral-medium-latest": {
+      "input": 2.7,
+      "output": 8.1,
+      "score": 1148,
+      "context_length": 32000,
+      "knowledge_cutoff": null
+    },
+    "claude-3-haiku-20240307": {
+      "input": 0.25,
+      "output": 1.25,
+      "score": 1182,
+      "context_length": 200000,
+      "knowledge_cutoff": 1690848000
+    },
+    "command-r-plus": {
+      "input": 3.0,
+      "output": 15.0,
+      "score": 1194,
+      "context_length": 128000,
+      "knowledge_cutoff": 1709251200
+    },
+    "gpt-3.5-turbo-0125": {
+      "input": 0.5,
+      "output": 1.5,
+      "score": 1119,
+      "context_length": 16385,
+      "knowledge_cutoff": 1630454400
+    },
+    "gpt-4-0125-preview": {
+      "input": 10.0,
+      "output": 30.0,
+      "score": 1250,
+      "context_length": 128000,
+      "knowledge_cutoff": 1701388800
+    },
+    "claude-3-opus-20240229": {
+      "input": 15.0,
+      "output": 75.0,
+      "score": 1256,
+      "context_length": 200000,
+      "knowledge_cutoff": 1690848000
+    },
+    "command-r": {
+      "input": 0.5,
+      "output": 1.5,
+      "score": 1148,
+      "context_length": 128000,
+      "knowledge_cutoff": 1709251200
+    },
+    "claude-3-sonnet-20240229": {
+      "input": 3.0,
+      "output": 15.0,
+      "score": 1204,
+      "context_length": 200000,
+      "knowledge_cutoff": 1690848000
     }
   }
 }

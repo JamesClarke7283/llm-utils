@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use clap::{Parser, Subcommand, ValueEnum};
 use serde::{Deserialize, Serialize};
 use prettytable::{row, Table};
+use fancy_regex::Regex;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -57,6 +58,8 @@ enum SortMetric {
     Price,
     Score,
     ModelName,
+    ContextLength,
+    KnowledgeCutoff,
 }
 
 #[derive(Subcommand)]
@@ -67,16 +70,24 @@ enum ManageCommands {
         model_name: String,
 
         /// Input cost per 1M tokens in dollars
+        #[arg(long)]
         input_cost: f64,
 
         /// Output cost per 1M tokens in dollars
+        #[arg(long)]
         output_cost: f64,
 
         /// Arena Elo Score of the LLM model
+        #[arg(long)]
         score: Option<i32>,
 
         /// Context length of the LLM model
+        #[arg(long)]
         context_length: Option<u32>,
+
+        /// Knowledge cutoff of the LLM model (DD/MM/YYYY, "Online", or Unix epoch)
+        #[arg(long)]
+        knowledge_cutoff: Option<String>,
     },
 
     /// Delete an LLM model and its pricing information
@@ -105,6 +116,10 @@ enum ManageCommands {
         /// Context length of the LLM model
         #[arg(long)]
         context_length: Option<u32>,
+
+        /// Knowledge cutoff of the LLM model (DD/MM/YYYY, "Online", or Unix epoch)
+        #[arg(long)]
+        knowledge_cutoff: Option<String>,
     },
 }
 
@@ -119,6 +134,7 @@ struct LLMCost {
     output: f64,
     score: Option<i32>,
     context_length: Option<u32>,
+    knowledge_cutoff: Option<i64>,
 }
 
 fn main() {
@@ -181,15 +197,21 @@ fn main() {
                     }
                     SortMetric::Score => b.1.score.cmp(&a.1.score),
                     SortMetric::ModelName => a.0.cmp(b.0),
+                    SortMetric::ContextLength => b.1.context_length.cmp(&a.1.context_length),
+                    SortMetric::KnowledgeCutoff => b.1.knowledge_cutoff.cmp(&a.1.knowledge_cutoff),
                 }
             });
 
             let mut table = Table::new();
-            table.add_row(row!["Model", "Input Cost (per 1M tokens)", "Output Cost (per 1M tokens)", "Score", "Context Length"]);
+            table.add_row(row!["Model", "Input Cost (per 1M tokens)", "Output Cost (per 1M tokens)", "Score", "Context Length", "Knowledge Cutoff"]);
             for (model_name, cost) in model_costs {
                 let score = cost.score.map(|s| s.to_string()).unwrap_or_else(|| "-".to_string());
-                let context_length = cost.context_length.map(|c| c.to_string()).unwrap_or_else(|| "-".to_string());
-                table.add_row(row![model_name, format!("${:.2}", cost.input), format!("${:.2}", cost.output), score, context_length]);
+                let context_length = cost.context_length.map(|c| {
+                    let re = Regex::new(r"(?<=\d)(?=(\d{3})+$)").unwrap();
+                    re.replace_all(&c.to_string(), ",").to_string()
+                }).unwrap_or_else(|| "-".to_string());
+                let knowledge_cutoff = cost.knowledge_cutoff.map(|k| format_knowledge_cutoff(k)).unwrap_or_else(|| "-".to_string());
+                table.add_row(row![model_name, format!("${:.2}", cost.input), format!("${:.2}", cost.output), score, context_length, knowledge_cutoff]);
             }
             table.printstd();
         }
@@ -200,8 +222,10 @@ fn main() {
                 output_cost,
                 score,
                 context_length,
+                knowledge_cutoff,
             } => {
                 let mut pricing = load_pricing_from_file(&PathBuf::from("llm_pricing.json"));
+                let epoch = parse_knowledge_cutoff(knowledge_cutoff);
                 pricing.models.insert(
                     model_name.clone(),
                     LLMCost {
@@ -209,6 +233,7 @@ fn main() {
                         output: output_cost,
                         score,
                         context_length,
+                        knowledge_cutoff: epoch,
                     },
                 );
                 save_pricing_to_file(&pricing, &PathBuf::from("llm_pricing.json"));
@@ -229,6 +254,7 @@ fn main() {
                 output_cost,
                 score,
                 context_length,
+                knowledge_cutoff,
             } => {
                 let mut pricing = load_pricing_from_file(&PathBuf::from("llm_pricing.json"));
                 if let Some(cost) = pricing.models.get_mut(&model_name) {
@@ -243,6 +269,9 @@ fn main() {
                     }
                     if let Some(c) = context_length {
                         cost.context_length = Some(c);
+                    }
+                    if let Some(k) = knowledge_cutoff {
+                        cost.knowledge_cutoff = parse_knowledge_cutoff(Some(k));
                     }
                     save_pricing_to_file(&pricing, &PathBuf::from("llm_pricing.json"));
                     println!("Model '{}' updated successfully.", model_name);
@@ -305,4 +334,39 @@ fn save_pricing_to_file(pricing: &LLMPricing, file: &PathBuf) {
         .expect("Failed to open the pricing file for writing.");
     let writer = BufWriter::new(file);
     serde_json::to_writer_pretty(writer, pricing).expect("Failed to write the pricing file.");
+}
+
+fn parse_knowledge_cutoff(date_str: Option<String>) -> Option<i64> {
+    if let Some(date) = date_str {
+        if date.to_lowercase() == "online" {
+            Some(0)
+        } else if let Ok(epoch) = date.parse::<i64>() {
+            Some(epoch)
+        } else {
+            let parts: Vec<&str> = date.split('/').collect();
+            if parts.len() == 3 {
+                let day = parts[0].parse::<u32>().unwrap_or(1);
+                let month = parts[1].parse::<u32>().unwrap_or(1);
+                let year = parts[2].parse::<i32>().unwrap_or(2000);
+                let naive_date = chrono::NaiveDate::from_ymd_opt(year, month, day)
+                    .unwrap_or(chrono::NaiveDate::from_ymd(2000, 1, 1));
+                let naive_datetime = naive_date.and_hms_opt(0, 0, 0).unwrap();
+                Some(naive_datetime.timestamp())
+            } else {
+                None
+            }
+        }
+    } else {
+        None
+    }
+}
+
+fn format_knowledge_cutoff(epoch: i64) -> String {
+    if epoch == 0 {
+        "Online".to_string()
+    } else {
+        let naive_datetime = chrono::NaiveDateTime::from_timestamp_opt(epoch, 0).unwrap();
+        let datetime = chrono::DateTime::<chrono::Utc>::from_utc(naive_datetime, chrono::Utc);
+        datetime.format("%d/%m/%Y").to_string()
+    }
 }
