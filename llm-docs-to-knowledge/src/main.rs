@@ -1,5 +1,6 @@
 use clap::{Parser, Subcommand};
-use docs_to_knowledge::{Knowledge, KnowledgeTrait, KnowledgeType};
+use docs_to_knowledge::{Knowledge, KnowledgeType};
+use docs_to_knowledge::KnowledgeTrait;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -15,36 +16,25 @@ struct Cli {
 enum Commands {
     /// Fetch and generate knowledge for a package
     Fetch {
-        /// Package name
+        /// Path to the local git repository
         #[arg(short, long)]
-        name: String,
-
-        /// Package version (optional, default is "latest")
-        #[arg(short = 'v', long)]
-        version: Option<String>,
+        repo_path: String,
 
         /// Source type (currently only "cratesio" is supported)
         #[arg(short = 't', long, default_value = "cratesio")]
         source_type: String,
-
-        /// Selenium URL
-        #[arg(short = 'u', long, default_value = "http://localhost:4444")]
-        selenium_url: String,
     },
     /// List the available sources
     List,
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let cli = Cli::parse();
 
     match &cli.command {
         Some(Commands::Fetch {
-            name,
-            version,
+            repo_path,
             source_type,
-            selenium_url,
         }) => {
             let knowledge_type = match source_type.as_str() {
                 "cratesio" => KnowledgeType::CratesIo,
@@ -54,16 +44,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             };
 
-            let knowledge = Knowledge::new(
-                name.clone(),
-                version.clone(),
-                knowledge_type,
-                selenium_url.clone(),
-            );
+            let knowledge = Knowledge::new(repo_path.clone(), knowledge_type);
+            let markdown = knowledge.fetch_all()?;
 
-            let markdown = knowledge.fetch_all().await?;
-
-            let file_name = format!("{}_knowledge.md", name);
+            let file_name = format!("{}_knowledge.md", repo_path.split('/').last().unwrap());
             let file_path = Path::new(&file_name);
             let mut file = File::create(file_path)?;
             file.write_all(markdown.as_bytes())?;

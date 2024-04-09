@@ -1,45 +1,52 @@
-use thirtyfour::prelude::*;
+use reqwest::blocking::Client;
+use scraper::{Html, Selector};
+use std::process::Command;
 use crate::convert_to_markdown;
 
-const BASE_URL: &str = "https://docs.rs";
+const BASE_URL: &str = "http://localhost:8000";
 
-async fn fetch_page_markdown(driver: &WebDriver, url: &str) -> Result<String, Box<dyn std::error::Error>> {
-    driver.get(url).await?;
-
-    let main_content = driver.find(By::Id("main-content")).await?;
-    let html = main_content.inner_html().await?;
-
-    let markdown = convert_to_markdown(&html).await;
-
-    Ok(markdown)
+fn fetch_page_html(client: &Client, url: &str) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    let response = client.get(url).send()?;
+    let html = response.text()?;
+    Ok(html)
 }
 
-pub async fn fetch_docs(name: &str, version: &str, selenium_url: &str) -> Result<String, Box<dyn std::error::Error>> {
-    let caps = DesiredCapabilities::chrome();
-    let driver = WebDriver::new(selenium_url, caps).await?;
+fn extract_main_content(html: &str) -> String {
+    let document = Html::parse_document(html);
+    let selector = Selector::parse("#main-content").unwrap();
+    let main_content = document.select(&selector).next().unwrap();
+    main_content.html()
+}
 
-    let all_url = format!("{}/{}/{}/{}/all.html", BASE_URL, name, version, name);
-    driver.get(&all_url).await?;
+pub fn fetch_docs(repo_path: &str) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    let _ = Command::new("cargo")
+        .arg("doc")
+        .arg("--no-deps")
+        .arg("--open")
+        .current_dir(repo_path)
+        .spawn()?;
 
-    let main_content = driver.find(By::Id("main-content")).await?;
-    let link_elements = main_content.find_all(By::Tag("a")).await?;
+    let client = Client::new();
+    let all_url = format!("{}/all.html", BASE_URL);
+    let all_html = fetch_page_html(&client, &all_url)?;
+    let document = Html::parse_document(&all_html);
 
-    let mut links = Vec::new();
-    for link in link_elements {
-        let href = link.attr("href").await?.unwrap_or_default();
-        links.push(href);
-    }
+    let link_selector = Selector::parse("a").unwrap();
+    let links: Vec<String> = document
+        .select(&link_selector)
+        .map(|element| element.value().attr("href").unwrap_or_default().to_string())
+        .collect();
 
     let mut markdown = String::new();
 
     for href in links {
-        let page_url = format!("{}/{}/{}/{}/{}", BASE_URL, name, version, name, href);
-        let page_markdown = fetch_page_markdown(&driver, &page_url).await?;
+        let page_url = format!("{}/{}", BASE_URL, href);
+        let page_html = fetch_page_html(&client, &page_url)?;
+        let main_content = extract_main_content(&page_html);
+        let page_markdown = convert_to_markdown(&main_content);
         markdown.push_str(&page_markdown);
         markdown.push_str("\n\n");
     }
-
-    driver.quit().await?;
 
     Ok(markdown)
 }

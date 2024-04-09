@@ -4,9 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-thirtyfour = "0.32"
+reqwest = { version = "0.12", features = ["blocking"] }
+scraper = "0.19"
 html2md = "0.2"
-async-trait = "0.1"
+tokio = "1"
 
 [lints]
 workspace = true
