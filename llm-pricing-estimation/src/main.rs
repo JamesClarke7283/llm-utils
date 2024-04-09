@@ -74,6 +74,9 @@ enum ManageCommands {
 
         /// Arena Elo Score of the LLM model
         score: Option<i32>,
+
+        /// Context length of the LLM model
+        context_length: Option<u32>,
     },
 
     /// Delete an LLM model and its pricing information
@@ -98,6 +101,10 @@ enum ManageCommands {
         /// Arena Elo Score of the LLM model
         #[arg(long)]
         score: Option<i32>,
+
+        /// Context length of the LLM model
+        #[arg(long)]
+        context_length: Option<u32>,
     },
 }
 
@@ -111,6 +118,7 @@ struct LLMCost {
     input: f64,
     output: f64,
     score: Option<i32>,
+    context_length: Option<u32>,
 }
 
 fn main() {
@@ -177,10 +185,11 @@ fn main() {
             });
 
             let mut table = Table::new();
-            table.add_row(row!["Model", "Input Cost (per 1M tokens)", "Output Cost (per 1M tokens)", "Score"]);
+            table.add_row(row!["Model", "Input Cost (per 1M tokens)", "Output Cost (per 1M tokens)", "Score", "Context Length"]);
             for (model_name, cost) in model_costs {
                 let score = cost.score.map(|s| s.to_string()).unwrap_or_else(|| "-".to_string());
-                table.add_row(row![model_name, format!("${:.2}", cost.input), format!("${:.2}", cost.output), score]);
+                let context_length = cost.context_length.map(|c| c.to_string()).unwrap_or_else(|| "-".to_string());
+                table.add_row(row![model_name, format!("${:.2}", cost.input), format!("${:.2}", cost.output), score, context_length]);
             }
             table.printstd();
         }
@@ -190,6 +199,7 @@ fn main() {
                 input_cost,
                 output_cost,
                 score,
+                context_length,
             } => {
                 let mut pricing = load_pricing_from_file(&PathBuf::from("llm_pricing.json"));
                 pricing.models.insert(
@@ -198,6 +208,7 @@ fn main() {
                         input: input_cost,
                         output: output_cost,
                         score,
+                        context_length,
                     },
                 );
                 save_pricing_to_file(&pricing, &PathBuf::from("llm_pricing.json"));
@@ -217,6 +228,7 @@ fn main() {
                 input_cost,
                 output_cost,
                 score,
+                context_length,
             } => {
                 let mut pricing = load_pricing_from_file(&PathBuf::from("llm_pricing.json"));
                 if let Some(cost) = pricing.models.get_mut(&model_name) {
@@ -228,6 +240,9 @@ fn main() {
                     }
                     if let Some(s) = score {
                         cost.score = Some(s);
+                    }
+                    if let Some(c) = context_length {
+                        cost.context_length = Some(c);
                     }
                     save_pricing_to_file(&pricing, &PathBuf::from("llm_pricing.json"));
                     println!("Model '{}' updated successfully.", model_name);
