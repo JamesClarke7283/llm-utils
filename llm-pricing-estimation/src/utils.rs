@@ -1,4 +1,4 @@
-use chrono::{DateTime, NaiveDate, Utc};
+use chrono::NaiveDate;
 use fancy_regex::Regex;
 
 pub fn parse_knowledge_cutoff(date_str: Option<String>) -> Option<i64> {
@@ -30,8 +30,7 @@ pub fn format_knowledge_cutoff(epoch: i64) -> String {
     if epoch == 0 {
         "Online".to_string()
     } else {
-        let naive_datetime = chrono::NaiveDateTime::from_timestamp_opt(epoch, 0).unwrap();
-        let datetime = chrono::DateTime::<chrono::Utc>::from_utc(naive_datetime, chrono::Utc);
+        let datetime = chrono::DateTime::from_timestamp(epoch, 0).unwrap();
         datetime.format("%d/%m/%Y").to_string()
     }
 }

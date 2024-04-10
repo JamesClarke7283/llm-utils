@@ -4,7 +4,7 @@ pub mod utils;
 
 use clap::Parser;
 use crate::commands::{Cli, Commands};
-use crate::pricing::{load_pricing_from_file, save_pricing_to_file, LLMCost, LLMPricing};
+use crate::pricing::{load_pricing_from_file, save_pricing_to_file, LLMCost};
 use crate::utils::{format_context_length, format_knowledge_cutoff, parse_knowledge_cutoff};
 use prettytable::{row, Table};
 use std::path::PathBuf;
