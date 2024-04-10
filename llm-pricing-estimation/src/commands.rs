@@ -35,7 +35,7 @@ pub enum Commands {
         file: PathBuf,
 
         /// Sort the list by the specified metric
-        #[arg(long, value_enum, default_value_t = SortMetric::CostScoreRatio)]
+        #[arg(long, value_enum, default_value_t = SortMetric::Score)]
         sort: SortMetric,
     },
 
