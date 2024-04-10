@@ -114,7 +114,11 @@ fn main() {
                     .knowledge_cutoff
                     .map(|k| format_knowledge_cutoff(k))
                     .unwrap_or_else(|| "-".to_string());
-                let function_calling = if cost.function_calling { "Yes" } else { "No" };
+                let function_calling = match cost.function_calling {
+                    Some(true) => "Yes",
+                    Some(false) => "No",
+                    None => "-",
+                };
                 let languages = if cost.languages.is_empty() {
                     "-".to_string()
                 } else {
@@ -154,7 +158,7 @@ fn main() {
                         score,
                         context_length,
                         knowledge_cutoff: epoch,
-                        function_calling: function_calling.unwrap_or(false),
+                        function_calling: function_calling,
                         languages: languages.map(|l| l.split(',').map(|s| s.trim().to_titlecase()).collect()).unwrap_or_else(|| vec!["-".to_string()]),
                     },
                 );
@@ -198,7 +202,9 @@ fn main() {
                         cost.knowledge_cutoff = parse_knowledge_cutoff(Some(k));
                     }
                     if let Some(fc) = function_calling {
-                        cost.function_calling = fc;
+                        cost.function_calling = Some(fc);
+                    } else {
+                        cost.function_calling = None;
                     }
                     if let Some(langs) = languages {
                         cost.languages = langs.split(',').map(|s| s.trim().to_titlecase()).collect();

@@ -17,7 +17,7 @@ pub struct LLMCost {
     pub context_length: Option<u32>,
     pub knowledge_cutoff: Option<i64>,
     #[serde(default)]
-    pub function_calling: bool,
+    pub function_calling: Option<bool>,
     #[serde(default)]
     pub languages: Vec<String>,
 }
