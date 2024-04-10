@@ -43,3 +43,28 @@ pub fn format_context_length(context_length: Option<u32>) -> String {
         })
         .unwrap_or_else(|| "-".to_string())
 }
+
+pub trait ToTitleCase {
+    fn to_titlecase(&self) -> String;
+}
+
+impl<'a> ToTitleCase for &'a str {
+    fn to_titlecase(&self) -> String {
+        let mut result = String::new();
+        let mut capitalize_next = true;
+
+        for c in self.chars() {
+            if c.is_ascii_whitespace() {
+                result.push(c);
+                capitalize_next = true;
+            } else if capitalize_next {
+                result.push(c.to_ascii_uppercase());
+                capitalize_next = false;
+            } else {
+                result.push(c.to_ascii_lowercase());
+            }
+        }
+
+        result
+    }
+}

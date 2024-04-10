@@ -16,6 +16,10 @@ pub struct LLMCost {
     pub score: Option<i32>,
     pub context_length: Option<u32>,
     pub knowledge_cutoff: Option<i64>,
+    #[serde(default)]
+    pub function_calling: bool,
+    #[serde(default)]
+    pub languages: Vec<String>,
 }
 
 pub fn load_pricing_from_file(file_path: &PathBuf) -> LLMPricing {
@@ -35,10 +39,7 @@ pub fn load_pricing_from_file(file_path: &PathBuf) -> LLMPricing {
     let file = match file_open_result {
         Ok(file) => file,
         Err(_) => {
-            eprintln!(
-                "Failed to open the pricing file: {}",
-                file_path.display()
-            );
+            eprintln!("Failed to open the pricing file: {}", file_path.display());
             return LLMPricing {
                 models: HashMap::new(),
             };
@@ -46,15 +47,18 @@ pub fn load_pricing_from_file(file_path: &PathBuf) -> LLMPricing {
     };
 
     let reader = BufReader::new(file);
-    serde_json::from_reader(reader).unwrap_or_else(|_| {
+    let pricing: LLMPricing = serde_json::from_reader(reader).unwrap_or_else(|err| {
         eprintln!(
-            "Pricing file '{}' is empty or invalid. Using an empty pricing.",
-            file_path.display()
+            "Error parsing pricing file '{}': {}. Using an empty pricing.",
+            file_path.display(),
+            err
         );
         LLMPricing {
             models: HashMap::new(),
         }
-    })
+    });
+
+    pricing
 }
 
 pub fn save_pricing_to_file(pricing: &LLMPricing, file: &PathBuf) {

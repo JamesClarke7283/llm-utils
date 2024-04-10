@@ -54,6 +54,8 @@ pub enum SortMetric {
     ModelName,
     ContextLength,
     KnowledgeCutoff,
+    FunctionCalling,
+    Languages,
 }
 
 #[derive(Subcommand)]
@@ -82,6 +84,14 @@ pub enum ManageCommands {
         /// Knowledge cutoff of the LLM model (DD/MM/YYYY, "Online", or Unix epoch)
         #[arg(long)]
         knowledge_cutoff: Option<String>,
+
+        /// Function calling support of the LLM model
+        #[arg(long)]
+        function_calling: Option<bool>,
+
+        /// Languages supported by the LLM model (comma-separated)
+        #[arg(long)]
+        languages: Option<String>,
     },
 
     /// Delete an LLM model and its pricing information
@@ -114,5 +124,13 @@ pub enum ManageCommands {
         /// Knowledge cutoff of the LLM model (DD/MM/YYYY, "Online", or Unix epoch)
         #[arg(long)]
         knowledge_cutoff: Option<String>,
+
+        /// Function calling support of the LLM model
+        #[arg(long)]
+        function_calling: Option<bool>,
+
+        /// Languages supported by the LLM model (comma-separated)
+        #[arg(long)]
+        languages: Option<String>,
     },
 }
