@@ -1,23 +1,5 @@
 {
   "models": {
-    "mistral-medium-latest": {
-      "input": 2.7,
-      "output": 8.1,
-      "score": 1148,
-      "context_length": 32000,
-      "knowledge_cutoff": null,
-      "function_calling": true,
-      "languages": []
-    },
-    "claude-3-sonnet-20240229": {
-      "input": 3.0,
-      "output": 15.0,
-      "score": 1203,
-      "context_length": 200000,
-      "knowledge_cutoff": 1690848000,
-      "function_calling": true,
-      "languages": []
-    },
     "mistral-large-latest": {
       "input": 8.0,
       "output": 24.0,
@@ -27,39 +9,23 @@
       "function_calling": true,
       "languages": []
     },
-    "mistral-small-latest": {
+    "open-mixtral-8x22b": {
       "input": 2.0,
       "output": 6.0,
-      "score": 1114,
+      "score": 1145,
+      "context_length": 64000,
+      "knowledge_cutoff": 946684800,
+      "function_calling": true,
+      "languages": [
+        "-"
+      ]
+    },
+    "mistral-medium-latest": {
+      "input": 2.7,
+      "output": 8.1,
+      "score": 1148,
       "context_length": 32000,
       "knowledge_cutoff": null,
-      "function_calling": true,
-      "languages": []
-    },
-    "gpt-3.5-turbo-0125": {
-      "input": 0.5,
-      "output": 1.5,
-      "score": 1119,
-      "context_length": 16385,
-      "knowledge_cutoff": 1630454400,
-      "function_calling": true,
-      "languages": []
-    },
-    "claude-3-opus-20240229": {
-      "input": 15.0,
-      "output": 75.0,
-      "score": 1256,
-      "context_length": 200000,
-      "knowledge_cutoff": 1690848000,
-      "function_calling": true,
-      "languages": []
-    },
-    "claude-3-haiku-20240307": {
-      "input": 0.25,
-      "output": 1.25,
-      "score": 1181,
-      "context_length": 200000,
-      "knowledge_cutoff": 1690848000,
       "function_calling": true,
       "languages": []
     },
@@ -72,21 +38,88 @@
       "function_calling": true,
       "languages": []
     },
-    "command-r-plus": {
-      "input": 3.0,
-      "output": 15.0,
-      "score": 1193,
-      "context_length": 128000,
-      "knowledge_cutoff": 1709251200,
-      "function_calling": true,
-      "languages": []
-    },
     "gpt-4-turbo-2024-04-09": {
       "input": 10.0,
       "output": 30.0,
       "score": 1261,
       "context_length": 128000,
       "knowledge_cutoff": 1701388800,
+      "function_calling": true,
+      "languages": []
+    },
+    "open-mistral-7b": {
+      "input": 0.25,
+      "output": 0.25,
+      "score": 1073,
+      "context_length": 32000,
+      "knowledge_cutoff": 946684800,
+      "function_calling": true,
+      "languages": [
+        "-"
+      ]
+    },
+    "claude-3-sonnet-20240229": {
+      "input": 3.0,
+      "output": 15.0,
+      "score": 1203,
+      "context_length": 200000,
+      "knowledge_cutoff": 1690848000,
+      "function_calling": true,
+      "languages": []
+    },
+    "mistral-small-latest": {
+      "input": 2.0,
+      "output": 6.0,
+      "score": 1114,
+      "context_length": 32000,
+      "knowledge_cutoff": null,
+      "function_calling": true,
+      "languages": []
+    },
+    "open-mixtral-8x7b": {
+      "input": 0.7,
+      "output": 0.7,
+      "score": 1114,
+      "context_length": 32000,
+      "knowledge_cutoff": 946684800,
+      "function_calling": true,
+      "languages": [
+        "-"
+      ]
+    },
+    "claude-3-haiku-20240307": {
+      "input": 0.25,
+      "output": 1.25,
+      "score": 1181,
+      "context_length": 200000,
+      "knowledge_cutoff": 1690848000,
+      "function_calling": true,
+      "languages": []
+    },
+    "claude-3-opus-20240229": {
+      "input": 15.0,
+      "output": 75.0,
+      "score": 1256,
+      "context_length": 200000,
+      "knowledge_cutoff": 1690848000,
+      "function_calling": true,
+      "languages": []
+    },
+    "gpt-3.5-turbo-0125": {
+      "input": 0.5,
+      "output": 1.5,
+      "score": 1119,
+      "context_length": 16385,
+      "knowledge_cutoff": 1630454400,
+      "function_calling": true,
+      "languages": []
+    },
+    "command-r-plus": {
+      "input": 3.0,
+      "output": 15.0,
+      "score": 1193,
+      "context_length": 128000,
+      "knowledge_cutoff": 1709251200,
       "function_calling": true,
       "languages": []
     }
