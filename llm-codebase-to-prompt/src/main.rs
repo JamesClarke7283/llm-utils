@@ -1,8 +1,10 @@
 use clap::{arg, command, Parser};
 use llm_codebase_to_prompt::{process_files, read_gitignore};
-use notify::{RecursiveMode, Watcher};
+use notify::{RecursiveMode, Watcher, RecommendedWatcher};
 use std::fs::File;
 use std::sync::mpsc::{channel, Receiver};
+use std::path::Path;
+use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(name = "llm-codebase-to-prompt", version, about, long_about = None)]
@@ -31,7 +33,14 @@ fn main() {
 
     if args.watch {
         let (tx, rx) = channel();
-        let _watcher = notify::recommended_watcher(tx).expect("Failed to create watcher");
+        let mut watcher: RecommendedWatcher = notify::recommended_watcher(tx).expect("Failed to create watcher");
+
+        // Add paths to watch
+        let source_path = Path::new(&args.source_files);
+        let instruct_path = Path::new(&args.instruct_files);
+
+        watcher.watch(source_path, RecursiveMode::Recursive).expect("Failed to watch source files");
+        watcher.watch(instruct_path, RecursiveMode::Recursive).expect("Failed to watch instruct files");
 
         loop {
             match rx.recv() {
@@ -69,4 +78,3 @@ fn create_prompt(args: &Cli) -> Result<(), String> {
         ignore.as_ref(),
     )
 }
-

@@ -3,13 +3,13 @@ use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use std::env;
 use std::fs;
 use std::io::Write;
-use std::path::PathBuf;
 
 pub fn read_gitignore() -> Result<Option<Gitignore>, String> {
     let current_dir = env::current_dir().map_err(|e| e.to_string())?;
     let gitignore_path = current_dir.join(".gitignore");
     if gitignore_path.is_file() {
-        let gitignore_builder = GitignoreBuilder::new(&current_dir);
+        let mut gitignore_builder = GitignoreBuilder::new(&current_dir);
+        gitignore_builder.add(gitignore_path);
         gitignore_builder.build().map(Some).map_err(|e| e.to_string())
     } else {
         Ok(None)
@@ -42,4 +42,3 @@ pub fn process_files(
     }
     writeln!(output_file).map_err(|e| e.to_string())
 }
-
