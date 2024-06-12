@@ -1,6 +1,6 @@
 [package]
 name = "llm-codebase-to-prompt"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 
 [lints]
@@ -11,4 +11,10 @@ clap = {version="4", features = ["derive"]}
 glob = "0.3"
 notify = "6.1"
 ignore = "0.4"
+log = { version = "0.4", features = ["std"] }
+env_logger = "0"
+chrono = "0.4"
 
+[features]
+default = ["logging"]
+logging = []
