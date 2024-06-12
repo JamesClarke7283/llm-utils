@@ -1,10 +1,10 @@
 use clap::{arg, command, Parser};
 use llm_codebase_to_prompt::{process_files, read_gitignore};
-use notify::{RecursiveMode, Watcher, RecommendedWatcher};
+use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use std::fs::File;
-use std::sync::mpsc::{channel, Receiver};
-use std::path::Path;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use std::sync::mpsc::channel;
+use std::env;
 
 #[derive(Parser)]
 #[command(name = "llm-codebase-to-prompt", version, about, long_about = None)]
@@ -25,11 +25,24 @@ struct Cli {
     gitignore: bool,
 
     #[arg(long)]
+    no_recursive_gitignore: bool,
+
+    #[arg(long)]
     watch: bool,
+
+    #[arg(required = true)]
+    working_directory: PathBuf,
 }
 
 fn main() {
     let args = Cli::parse();
+
+    let original_dir = env::current_dir().expect("Failed to get current directory");
+
+    if let Err(e) = env::set_current_dir(&args.working_directory) {
+        println!("Error changing working directory: {}", e);
+        return;
+    }
 
     if args.watch {
         let (tx, rx) = channel();
@@ -46,7 +59,7 @@ fn main() {
             match rx.recv() {
                 Ok(event) => {
                     println!("File changed: {:?}", event);
-                    if let Err(e) = create_prompt(&args) {
+                    if let Err(e) = create_prompt(&args, &original_dir) {
                         println!("Error: {}", e);
                     }
                 }
@@ -54,15 +67,18 @@ fn main() {
             }
         }
     } else {
-        if let Err(e) = create_prompt(&args) {
+        if let Err(e) = create_prompt(&args, &original_dir) {
             println!("Error: {}", e);
         }
     }
+
+    println!("Made prompt.txt file");
 }
 
-fn create_prompt(args: &Cli) -> Result<(), String> {
-    let ignore = if args.gitignore { read_gitignore()? } else { None };
-    let mut output_file = File::create("prompt.txt").map_err(|e| e.to_string())?;
+fn create_prompt(args: &Cli, original_dir: &PathBuf) -> Result<(), String> {
+    let ignore = if args.gitignore { read_gitignore(args.no_recursive_gitignore)? } else { None };
+    let prompt_file_path = original_dir.join("prompt.txt");
+    let mut output_file = File::create(&prompt_file_path).map_err(|e| e.to_string())?;
     process_files(
         &args.source_files,
         args.source_context.as_deref(),
