@@ -1,9 +1,9 @@
+// ./docs-to-knowledge/src/lib.rs
 pub mod crates_io;
 use html2md::parse_html;
 
 fn convert_to_markdown(html: &str) -> String {
-    let markdown = parse_html(html);
-    markdown
+    parse_html(html)
 }
 
 pub enum KnowledgeType {

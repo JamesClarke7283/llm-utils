@@ -1,8 +1,7 @@
+// ./docs-to-knowledge/src/main.rs
 use clap::{Parser, Subcommand};
 use docs_to_knowledge::{Knowledge, KnowledgeType};
 use docs_to_knowledge::KnowledgeTrait;
-use std::fs::File;
-use std::io::Write;
 use std::path::Path;
 
 #[derive(Parser)]
@@ -33,9 +32,9 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     match &cli.command {
         Some(Commands::Fetch {
-            repo_path,
-            source_type,
-        }) => {
+                 repo_path,
+                 source_type,
+             }) => {
             let knowledge_type = match source_type.as_str() {
                 "cratesio" => KnowledgeType::CratesIo,
                 _ => {
@@ -45,14 +44,10 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             };
 
             let knowledge = Knowledge::new(repo_path.clone(), knowledge_type);
-            let markdown = knowledge.fetch_all()?;
+            let summary = knowledge.fetch_all()?;
 
-            let file_name = format!("{}_knowledge.md", repo_path.split('/').last().unwrap());
-            let file_path = Path::new(&file_name);
-            let mut file = File::create(file_path)?;
-            file.write_all(markdown.as_bytes())?;
-
-            println!("Markdown written to file: {}", file_name);
+            // Print the summary to the console
+            println!("{}", summary);
         }
         Some(Commands::List) => {
             println!("Available sources:");
